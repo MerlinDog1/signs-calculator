@@ -1187,25 +1187,37 @@ function updateSpreadsheet() {
   const materials = ["stainless_steel", "mirror_stainless", "brass", "bronzed_brass"];
   const materialNames = {"stainless_steel":"Stainless Steel","mirror_stainless":"Mirror Stainless","brass":"Brass","bronzed_brass":"Bronzed Brass"};
   
-  // Etched table with Reverse Etched for 2mm & 3mm
+  // Etched table with Reverse Etched as separate rows
   let html = '<h4 style="margin:16px 0 8px 0;color:#7c3aed;">Etched</h4>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">';
-  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">2mm Rev</th><th style="padding:8px;text-align:right;">3mm</th><th style="padding:8px;text-align:right;">3mm Rev</th></tr>';
+  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">3mm</th></tr>';
   
+  // Regular materials
   materials.forEach(mat => {
     let row = [materialNames[mat]];
     [1.5, 2, 3].forEach((thick, idx) => {
       let price = basePrice * etchedMultiplierMap[mat][idx];
       price = price * 0.9091;
       row.push(formatCurrency(Math.round(price * 100) / 100));
-      
-      // Add reverse etched for 2mm and 3mm
-      if (thick === 2 || thick === 3) {
-        let revPrice = basePrice * etchedMultiplierMap[mat][idx] * 1.3 * 0.9091;
-        row.push(formatCurrency(Math.round(revPrice * 100) / 100));
-      }
     });
-    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;">' + row[3] + '</td><td style="padding:8px;text-align:right;">' + row[4] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;">' + row[5] + '</td></tr>';
+    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;">' + row[3] + '</td></tr>';
+  });
+  
+  // Reverse Etched rows (only 2mm and 3mm, not available for 1.5mm)
+  const revMaterials = ["stainless_steel", "mirror_stainless", "brass", "bronzed_brass"];
+  const revNames = {"stainless_steel":"Stainless Steel (Rev)","mirror_stainless":"Mirror Stainless (Rev)","brass":"Brass (Rev)","bronzed_brass":"Bronzed Brass (Rev)"};
+  
+  revMaterials.forEach(mat => {
+    let row = [revNames[mat]];
+    // 1.5mm is not available, show dash
+    row.push('—');
+    // 2mm and 3mm
+    [2, 3].forEach((thick, idx) => {
+      let idxInMap = thick === 2 ? 1 : 2;
+      let revPrice = basePrice * etchedMultiplierMap[mat][idxInMap] * 1.3 * 0.9091;
+      row.push(formatCurrency(Math.round(revPrice * 100) / 100));
+    });
+    html += '<tr style="border-bottom:1px solid #e5e7eb;background:#fdf4ff;"><td style="padding:8px;color:#7c3aed;font-weight:500;">' + row[0] + '</td><td style="padding:8px;text-align:right;color:#9ca3af;">' + row[1] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;font-weight:600;">' + row[2] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;font-weight:600;">' + row[3] + '</td></tr>';
   });
   html += '</table>';
   
