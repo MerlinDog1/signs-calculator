@@ -199,8 +199,7 @@
 <body>
 <div class="container">
   <div class="header">
-    <h1>JFK Signs — Price Calculator & Order Request Builder</h1>
-    <p>Trade Etching Direct Ltd — Standalone Pricing Tool</p>
+    <h1>JFK Signs</h1>
   </div>
   
   <div class="layout">
@@ -968,7 +967,6 @@ function generatePDF() {
   // Company info (right side)
   doc.setFontSize(10);
   let cY = 40;
-  ['Trade Etching Direct Ltd','Unit M Edison Courtyard','Brunel Road','Earlstrees Ind Estate','Corby','NN17 4LS','01536 203813','sales@tradeetching.com'].forEach(line => {
     doc.text(line, 150, cY); cY += 5;
   });
   
@@ -1078,7 +1076,6 @@ function generatePDF() {
   afterTableY += 5;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('This order request is subject to confirmation by Trade Etching Direct Ltd.', 14, afterTableY);
   doc.setFont('helvetica', 'normal');
   
   // Download
