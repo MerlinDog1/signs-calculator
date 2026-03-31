@@ -201,12 +201,16 @@
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <h1>JFK Signs — Price Calculator & Order Request Builder</h1>
-    <p>Trade Etching Direct Ltd — Standalone Pricing Tool</p>
-  </div>
   
-  <div class="layout">
+  
+  <div style="display:flex;justify-content:center;margin-bottom:20px;">
+    <div class="toggle-group" style="background:#7c3aed;padding:4px;border-radius:8px;">
+      <button class="toggle-btn active" id="calcToggle" onclick="showCalculator()" style="background:transparent;color:#fff;">Calculator</button>
+      <button class="toggle-btn" id="gridToggle" onclick="showGrid()" style="background:transparent;color:#ccc;">Grid View</button>
+    </div>
+  </div>
+
+  <div class="layout" id="calculatorLayout">
     <!-- LEFT PANEL: Calculator -->
     <div class="panel">
       <h2 class="section-title">Quote Builder</h2>
@@ -218,7 +222,7 @@
           <button class="toggle-btn active" onclick="setPrintType('Etched')">Etched</button>
           <button class="toggle-btn" onclick="setPrintType('UV Printed')">UV Printed</button>
           <button class="toggle-btn" onclick="setPrintType('Laser/Misc')">Laser/Misc</button>
-          <button class="toggle-btn" id="spreadsheetToggle" onclick="toggleSpreadsheetView()">📊 Grid</button>
+         
         </div>
       </div>
 
@@ -1181,6 +1185,24 @@ function updateSpreadsheet() {
   html += '</table>';
   
   container.innerHTML = html;
+}
+
+function showCalculator() {
+  document.getElementById("calculatorLayout").style.display = "grid";
+  document.getElementById("spreadsheetView").style.display = "none";
+  document.getElementById("calcToggle").classList.add("active");
+  document.getElementById("calcToggle").style.color = "#fff";
+  document.getElementById("gridToggle").classList.remove("active");
+  document.getElementById("gridToggle").style.color = "#ccc";
+}
+
+function showGrid() {
+  document.getElementById("calculatorLayout").style.display = "none";
+  document.getElementById("spreadsheetView").style.display = "block";
+  document.getElementById("calcToggle").classList.remove("active");
+  document.getElementById("calcToggle").style.color = "#ccc";
+  document.getElementById("gridToggle").classList.add("active");
+  document.getElementById("gridToggle").style.color = "#fff";
 }
 
 // INIT: Set discount to 10% by default
