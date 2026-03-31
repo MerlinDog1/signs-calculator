@@ -1173,13 +1173,7 @@ function updateSpreadsheet() {
   const wMm = spreadsheetUseInches ? wInput * 25.4 : wInput;
   const hMm = spreadsheetUseInches ? hInput * 25.4 : hInput;
   
-  // Always show the grid, even if dimensions are 0
-  if (wMm <= 0 && hMm <= 0) {
-    // Show placeholder message but still render tables
-    container.innerHTML = '<p style="color:#9ca3af;font-size:13px;margin-bottom:16px;">Enter dimensions to see prices</p>';
-  } else {
-    container.innerHTML = '';
-  }
+
   
   const areaInches = calculateAreaInches(wMm, hMm);
   // If dimensions are 0, set base price to 0 so all prices show as £0.00
