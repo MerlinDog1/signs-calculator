@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JFK Signs — Price Calculator & Order Request Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #111827; }
+  
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; font-weight: 600; color: #7c3aed; }
+  .header p { font-size: 14px; color: #6b7280; margin-top: 4px; }
+  
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  
+  .panel { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .section-title { font-size: 18px; font-weight: 600; color: #7c3aed; margin-bottom: 16px; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; }
+  
+  h3 { font-size: 16px; font-weight: 500; margin-bottom: 12px; color: #374151; }
+  
+  label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+  
+  .input-field {
+    width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+    font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s;
+    outline: none;
+  }
+  .input-field:focus { border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,0.2); }
+  
+  select.input-field { appearance: none; background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") right 8px center/16px no-repeat; padding-right: 32px; }
+  
+  textarea.input-field { min-height: 80px; resize: vertical; }
+  
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; padding: 8px 20px;
+    border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    border: none; font-family: 'Inter', sans-serif; gap: 6px;
+  }
+  .btn-primary { background: #7c3aed; color: #fff; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-primary:disabled { background: #c4b5fd; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: #7c3aed; border: 1px solid #7c3aed; }
+  .btn-secondary:hover { background: #f5f3ff; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  
+  .toggle-group { display: inline-flex; background: #f3f4f6; padding: 4px; border-radius: 8px; }
+  .toggle-btn {
+    padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif;
+    background: transparent; color: #374151; transition: all 0.2s;
+  }
+  .toggle-btn.active { background: #7c3aed; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  
+  .checkbox-group { display: flex; gap: 24px; }
+  .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+  .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: #7c3aed; }
+  
+  .radio-group { display: flex; gap: 16px; margin-bottom: 8px; }
+  .radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; }
+  .radio-label input[type="radio"] { accent-color: #7c3aed; }
+  
+  .price-display { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+  .price-label { font-size: 13px; font-weight: 500; color: #374151; }
+  .price-value { font-size: 20px; font-weight: 600; color: #111827; }
+  
+  .btn-group { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
+  
+  .section { margin-bottom: 24px; }
+  
+  .switch-container { display: flex; align-items: center; gap: 8px; }
+  .switch { position: relative; width: 40px; height: 22px; background: #d1d5db; border-radius: 11px; cursor: pointer; transition: 0.2s; border: none; }
+  .switch.on { background: #7c3aed; }
+  .switch::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: 0.2s; }
+  .switch.on::after { left: 20px; }
+  
+  /* Quote Receipt Styles */
+  .quote-item {
+    padding: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; border-radius: 8px;
+    background: #fff; transition: all 0.2s;
+  }
+  .quote-item:hover { border-color: #bfdbfe; }
+  .quote-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .quote-item-number { font-size: 13px; font-weight: 500; color: #6b7280; }
+  .quote-item-grid { display: grid; grid-template-columns: 80px 1fr 80px 100px; gap: 8px; align-items: start; }
+  .quote-item-label { font-size: 11px; color: #6b7280; }
+  .quote-item-value { font-size: 13px; font-weight: 500; }
+  
+  .empty-state { text-align: center; padding: 32px; border: 2px dashed #d1d5db; border-radius: 8px; background: #f9fafb; }
+  .empty-state p { color: #6b7280; }
+  .empty-state .sub { font-size: 13px; color: #9ca3af; margin-top: 4px; }
+  
+  .summary-box { padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+  .summary-row.total { border-top: 1px solid #d1d5db; padding-top: 12px; margin-top: 8px; }
+  .summary-label { color: #4b5563; font-size: 14px; }
+  .summary-value { font-weight: 500; font-size: 14px; }
+  .summary-value.total { font-weight: 700; font-size: 18px; }
+  
+  .delivery-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 8px; margin-bottom: 12px; }
+  .delivery-tab { padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: #6b7280; transition: 0.2s; }
+  .delivery-tab.active { background: #fff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  
+  .markup-box { padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #eff6ff; margin-bottom: 16px; }
+  
+  .edit-row { display: grid; grid-template-columns: 60px 90px 70px 80px; gap: 8px; align-items: end; }
+  .edit-row input { padding: 4px 8px; font-size: 13px; }
+  
+  .validation-msg { padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; color: #dc2626; font-size: 13px; margin-bottom: 8px; }
+  .warning-msg { background: #fffbeb; border-color: #fde68a; color: #d97706; }
+  .info-msg { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #92400e; font-size: 13px; padding: 8px 12px; margin-bottom: 8px; }
+  
+  .dim-unit-label { font-size: 12px; font-weight: 500; }
+  .dim-unit-active { color: #7c3aed; }
+  .dim-unit-inactive { color: #9ca3af; }
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    .container { padding: 12px; }
+    .header h1 { font-size: 20px; }
+    .header p { font-size: 12px; }
+    .layout { grid-template-columns: 1fr; gap: 16px; }
+    .panel { padding: 16px; border-radius: 8px; }
+    .section-title { font-size: 16px; }
+    h3 { font-size: 14px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 12px; }
+    .toggle-group { width: 100%; display: flex; }
+    .toggle-btn { flex: 1; padding: 10px 8px; font-size: 13px; }
+    .input-field { font-size: 16px; padding: 12px; }
+    .btn { width: 100%; padding: 12px; font-size: 14px; }
+    .btn-group { flex-direction: column; }
+    .btn-group .btn { width: 100%; }
+    .quote-item-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .edit-row { grid-template-columns: 1fr 1fr; }
+    .summary-box { padding: 12px; }
+    .price-display { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .price-value { font-size: 24px; }
+    .delivery-tabs { grid-template-columns: 1fr 1fr; }
+    .checkbox-group { flex-direction: column; gap: 12px; }
+    .radio-group { flex-direction: column; gap: 8px; }
+    .markup-box { padding: 10px; font-size: 13px; }
+    .empty-state { padding: 20px; }
+  }
+  @media (max-width: 480px) {
+    .container { padding: 8px; }
+    .header h1 { font-size: 18px; }
+    .toggle-btn { font-size: 12px; padding: 8px 4px; }
+    .input-field { font-size: 16px; }
+    label { font-size: 12px; }
+    .quote-item-grid { grid-template-columns: 1fr; }
+    .action-card { padding: 12px; }
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>JFK Signs — Price Calculator & Order Request Builder</h1>
+    <p>Trade Etching Direct Ltd — Standalone Pricing Tool</p>
+  </div>
+  
+  <div class="layout">
+    <!-- LEFT PANEL: Calculator -->
+    <div class="panel">
+      <h2 class="section-title">Quote Builder</h2>
+      
+      <!-- Print Type -->
+      <div class="section">
+        <h3>Print Type</h3>
+        <div class="toggle-group" id="printTypeToggle">
+          <button class="toggle-btn active" onclick="setPrintType('Etched')">Etched</button>
+          <button class="toggle-btn" onclick="setPrintType('UV Printed')">UV Printed</button>
+          <button class="toggle-btn" onclick="setPrintType('Laser/Misc')">Laser/Misc</button>
+        </div>
+      </div>
+      
+      <!-- Standard Form -->
+      <div id="standardForm">
+        <!-- Material & Thickness -->
+        <div class="section">
+          <h3>Material & Thickness</h3>
+          <div class="grid-2">
+            <div>
+              <label>Material</label>
+              <select class="input-field" id="material" onchange="onMaterialChange()">
+                <option value="stainless_steel">Stainless Steel</option>
+                <option value="mirror_stainless">Mirror Stainless</option>
+                <option value="brass">Brass</option>
+                <option value="bronzed_brass">Bronzed Brass</option>
+              </select>
+            </div>
+            <div>
+              <label>Thickness (mm)</label>
+              <select class="input-field" id="thickness" onchange="recalc()">
+                <option value="1.5">1.5mm</option>
+                <option value="2">2mm</option>
+                <option value="3">3mm</option>
+              </select>
+            </div>
+          </div>
+          <div id="dimWarning" class="warning-msg" style="display:none; margin-top:8px;"></div>
+          <div id="dimAdvisory" class="info-msg" style="display:none; margin-top:8px;">⚠️ Dimensions over 610mm — please contact Trade Etching Direct to confirm availability and pricing before ordering.</div>
+        </div>
+        
+        <!-- Dimensions & Quantity -->
+        <div class="section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin-bottom:0;">Dimensions & Quantity</h3>
+            <div class="switch-container">
+              <span class="dim-unit-label dim-unit-active" id="mmLabel">mm</span>
+              <button class="switch" id="unitSwitch" onclick="toggleUnits()"></button>
+              <span class="dim-unit-label dim-unit-inactive" id="inLabel">in</span>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div>
+              <label id="widthLabel">Width (mm)</label>
+              <input type="number" class="input-field" id="width" min="0" step="1" placeholder="Enter width" oninput="recalc()">
+            </div>
+            <div>
+              <label id="heightLabel">Height (mm)</label>
+              <input type="number" class="input-field" id="height" min="0" step="1" placeholder="Enter height" oninput="recalc()">
+            </div>
+            <div>
+              <label>Quantity</label>
+              <input type="number" class="input-field" id="quantity" min="1" value="1" oninput="recalc()">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Options -->
+        <div class="section">
+          <h3>Options</h3>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="reverseEtched" onchange="onOptionChange('reverse'); recalc()"> Reverse Etched
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="etchedPhoto" onchange="onOptionChange('photo'); recalc()"> Etched Photo
+            </label>
+          </div>
+        </div>
+        
+        <!-- Discount & Charges -->
+        <div class="section">
+          <h3>Discount & Charges</h3>
+          <div class="grid-2">
+            <div>
+              <div style="font-size:13px; font-weight:500; color:#374151; margin-bottom:8px;">Discount</div>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="discountType" value="fixed" checked onchange="recalc()"> Fixed (£)</label>
+                <label class="radio-label"><input type="radio" name="discountType" value="percentage" onchange="recalc()"> Percentage (%)</label>
+              </div>
+              <input type="number" class="input-field" id="discountValue" min="0" value="10" step="0.01" oninput="recalc()">
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:500; color:#374151; margin-bottom:8px;">Misc Charge</div>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="miscType" value="fixed" checked onchange="recalc()"> Fixed (£)</label>
+                <label class="radio-label"><input type="radio" name="miscType" value="percentage" onchange="recalc()"> Percentage (%)</label>
+              </div>
+              <input type="number" class="input-field" id="miscValue" min="0" value="" step="0.01" placeholder="0.00" oninput="recalc()">
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+  
+          </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="section">
+          <h3>Notes</h3>
+          <label>Notes/Services</label>
+          <textarea class="input-field" id="notes" placeholder="Add notes or additional services..."></textarea>
+        </div>
+        
+        <!-- Price Display -->
+        <div class="price-display">
+          <div>
+            <p class="price-label">Single Price:</p>
+            <p class="price-value" id="singlePrice">£0.00</p>
+          </div>
+          <div style="text-align:right;">
+            <p class="price-label">Total Price:</p>
+            <p class="price-value" id="totalPrice">£0.00</p>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="calcPrices()">🧮 Calculate</button>
+          <button class="btn btn-secondary" onclick="resetForm()">🔄 Refresh</button>
+          <button class="btn btn-secondary" onclick="copyCalc()">📋 Copy</button>
+          <button class="btn btn-primary" id="addToQuoteBtn" onclick="addToQuote()">✅ Add to Quote</button>
+        </div>
+      </div>
+      
+      <!-- Laser/Misc Form -->
+      <div id="laserForm" style="display:none;">
+        <div class="section">
+          <h3>Laser/Misc Details</h3>
+          <label>Laser/Misc Details</label>
+          <textarea class="input-field" id="laserDetails" placeholder="Enter detailed description of the custom work..."></textarea>
+          <div class="grid-2" style="margin-top:12px;">
+            <div>
+              <label>Price (£)</label>
+              <input type="number" class="input-field" id="laserPrice" min="0" step="0.01" placeholder="0.00" oninput="recalcLaser()">
+            </div>
+            <div>
+              <label>Quantity</label>
+              <input type="number" class="input-field" id="laserQuantity" min="1" value="1" oninput="recalcLaser()">
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label>Notes/Services</label>
+            <textarea class="input-field" id="laserNotes" placeholder="Add notes or additional services..."></textarea>
+          </div>
+          
+          <div class="price-display">
+            <div>
+              <p class="price-label">Single Price:</p>
+              <p class="price-value" id="laserSinglePrice">£0.00</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="price-label">Total Price:</p>
+              <p class="price-value" id="laserTotalPrice">£0.00</p>
+            </div>
+          </div>
+          
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="addLaserToQuote()">✅ Add to Quote</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- RIGHT PANEL: Quote Receipt -->
+    <div class="panel">
+      <h2 class="section-title" style="text-align:center;">Order Request</h2>
+
+      <!-- Quote Items -->
+      <div class="section">
+        <div id="quoteItemsContainer">
+          <div class="empty-state" id="emptyState"><p>No items added yet</p><p class="sub">Use the calculator to add items</p></div>
+        </div>
+      </div>
+
+      <!-- Quote Summary -->
+      <div class="section">
+        <div class="summary-box">
+          <h3 style="margin-bottom:12px;">Quote Summary</h3>
+          <div class="summary-row">
+            <span class="summary-label">Subtotal:</span>
+            <span class="summary-value" id="subtotalDisplay">£0.00</span>
+          </div>
+          <div class="summary-row">
+            <label class="summary-label" style="display:inline;">Delivery Cost (£):</label>
+            <input type="number" class="input-field" id="deliveryCost" min="0" step="0.01" value="" placeholder="0.00" style="width:120px; text-align:right;" oninput="recalcTotals()">
+          </div>
+          <div class="summary-row">
+            <div class="switch-container">
+              <span class="summary-label" id="vatLabel">VAT Included (20%):</span>
+              <button class="switch on" id="vatSwitch" onclick="toggleVat()"></button>
+              <span style="font-size:12px; color:#6b7280;" id="vatStatusText">VAT ON</span>
+            </div>
+            <span class="summary-value" id="vatDisplay">£0.00</span>
+          </div>
+          <div class="summary-row total">
+            <span class="summary-label" style="font-weight:600; color:#111827;">Total:</span>
+            <span class="summary-value total" id="totalDisplay">£0.00</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Delivery & Turnaround -->
+      <div class="section">
+        <label style="margin-bottom:8px; display:block;">Delivery & Turnaround</label>
+        <div class="delivery-tabs">
+          <button class="delivery-tab active" id="tabStandard" onclick="setDeliveryTab('standard')">⏱ Standard Turnaround</button>
+          <button class="delivery-tab" id="tabDate" onclick="setDeliveryTab('date')">📅 Specific Date</button>
+        </div>
+        <div id="standardDelivery">
+          <select class="input-field" id="turnaroundTime">
+            <option value="5 working days">5 working days</option>
+            <option value="10 working days">10 working days</option>
+            <option value="15 working days" selected>15 working days</option>
+            <option value="To Be Agreed">To Be Agreed</option>
+            <option value="Delivery and turnaround to be agreed">Delivery and turnaround to be agreed</option>
+          </select>
+        </div>
+        <div id="dateDelivery" style="display:none;">
+          <input type="date" class="input-field" id="specificDate">
+        </div>
+      </div>
+      
+      <!-- Reference -->
+      <div class="section">
+        <label>Reference (optional)</label>
+        <input type="text" class="input-field" id="reference" placeholder="e.g., Hotel Lobby Signs, Project Phase 2">
+        <p style="font-size:12px; color:#9ca3af; margin-top:4px;">Add a project name or identifier</p>
+      </div>
+      
+      <!-- Additional Notes -->
+      <div class="section">
+        <label>Additional Notes</label>
+        <textarea class="input-field" id="additionalNotes" placeholder="Add any additional notes to the quote..." style="min-height:100px;"></textarea>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="btn-group">
+        <button class="btn btn-primary" style="flex:1;" id="downloadPdfBtn" onclick="generatePDF()" disabled>📥 Download Order Request PDF</button>
+        <button class="btn btn-secondary" style="flex:1;" id="copyOrderRequestBtn" onclick="copyOrderRequest()" disabled>📋 Copy Order Request</button>
+        <button class="btn btn-danger" style="flex:1;" id="clearAllBtn" onclick="clearAll()" disabled>🗑 Clear All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+// CALCULATION LOGIC (verbatim from calculations.ts)
+// ============================
+const materialThicknesses = {
+  stainless_steel: [1.5, 2, 3],
+  mirror_stainless: [1.5, 2, 3],
+  brass: [1.5, 2, 3],
+  bronzed_brass: [1.5, 2, 3],
+};
+
+const materialLimits = {
+  stainless_steel: { maxWidth: 2500, maxHeight: 1250 },
+  mirror_stainless: { maxWidth: 2500, maxHeight: 1250 },
+  brass: { maxWidth: 2000, maxHeight: 1000 },
+  bronzed_brass: { maxWidth: 2000, maxHeight: 1000 },
+};
+
+// Updated multipliers (aligned exactly with current app logic)
+const etchedMultiplierMap = {
+  stainless_steel: [1.2705, 1.3976, 1.5246],
+  mirror_stainless: [1.4956, 2.0183, 2.9899],
+  brass: [1.4956, 2.0183, 2.9899],
+  bronzed_brass: [1.7206, 2.3208, 3.4400],
+};
+
+const uvMultiplierMap = {
+  stainless_steel: [0.8899, 0.9779, 1.0670],
+  mirror_stainless: [1.0472, 1.4135, 2.0933],
+  brass: [1.0472, 1.4135, 2.0933],
+  bronzed_brass: [1.2034, 1.6258, 2.4090],
+};
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+}
+
+function calculateAreaInches(wMm, hMm) { return (wMm / 25.4) * (hMm / 25.4); }
+function calculateBasePrice(areaInches) { return (areaInches * 0.4) + 10; }
+function calculatePrimerTax(wMm, hMm) { return Math.round(wMm * hMm * 0.000029484 * 100) / 100; }
+
+function calculateUnitPrice(wMm, hMm, material, thickness, printType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTaxAmount) {
+  const areaInches = calculateAreaInches(wMm, hMm);
+  let price = calculateBasePrice(areaInches);
+
+  const thicknesses = materialThicknesses[material];
+  const thicknessIndex = thicknesses.indexOf(thickness);
+  if (thicknessIndex === -1) return 0;
+
+  const map = printType === 'Etched' ? etchedMultiplierMap : uvMultiplierMap;
+  price = price * map[material][thicknessIndex];
+
+  price += primerTaxAmount;
+
+  if (reverseEtched) price *= 1.3;
+  if (etchedPhoto) price *= 1.3;
+
+  if (discountValue > 0) {
+    if (discountType === 'fixed') {
+      price -= discountValue;
+    } else {
+      price -= price * (discountValue / 100);
+    }
+  }
+
+  if (miscValue > 0) {
+    if (miscType === 'fixed') {
+      price += miscValue;
+    } else {
+      price += price * (miscValue / 100);
+    }
+  }
+
+  price = Math.max(0, price);
+  return Math.round(price * 100) / 100;
+}
+
+
+// ============================
+// STATE
+// ============================
+let currentPrintType = 'Etched';
+let useInches = false;
+let quoteItems = [];
+let vatEnabled = true;
+let deliveryTab = 'standard';
+let itemIdCounter = 0;
+
+function generateQuoteNumber() {
+  const now = new Date();
+  const y = now.getFullYear().toString().slice(2);
+  const m = (now.getMonth() + 1).toString().padStart(2, '0');
+  const d = now.getDate().toString().padStart(2, '0');
+  const r = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return 'TED' + y + m + d + '-' + r;
+}
+
+let quoteNumber = generateQuoteNumber();
+
+// ============================
+// UI FUNCTIONS
+// ============================
+function setPrintType(type) {
+  currentPrintType = type;
+  document.querySelectorAll('#printTypeToggle .toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim() === type);
+  });
+  document.getElementById('standardForm').style.display = type === 'Laser/Misc' ? 'none' : 'block';
+  document.getElementById('laserForm').style.display = type === 'Laser/Misc' ? 'block' : 'none';
+}
+
+function onMaterialChange() {
+  recalc();
+  validateDimensions();
+}
+
+function validateDimensions() {
+  const material = document.getElementById('material').value;
+  const limits = materialLimits[material];
+  let wMm = getWidthMm();
+  let hMm = getHeightMm();
+  const warn = document.getElementById('dimWarning');
+  
+  if (wMm > 0 && hMm > 0 && (wMm > limits.maxWidth || hMm > limits.maxHeight)) {
+    warn.style.display = 'block';
+    warn.textContent = `Maximum size for ${material.replace(/_/g, ' ')}: ${limits.maxWidth}mm × ${limits.maxHeight}mm`;
+    return true;
+  }
+  warn.style.display = 'none';
+  return false;
+}
+
+function getWidthMm() {
+  const val = parseFloat(document.getElementById('width').value) || 0;
+  return useInches ? val * 25.4 : val;
+}
+
+function getHeightMm() {
+  const val = parseFloat(document.getElementById('height').value) || 0;
+  return useInches ? val * 25.4 : val;
+}
+
+function toggleUnits() {
+  useInches = !useInches;
+  const sw = document.getElementById('unitSwitch');
+  sw.classList.toggle('on', useInches);
+  document.getElementById('mmLabel').className = 'dim-unit-label ' + (useInches ? 'dim-unit-inactive' : 'dim-unit-active');
+  document.getElementById('inLabel').className = 'dim-unit-label ' + (useInches ? 'dim-unit-active' : 'dim-unit-inactive');
+  
+  const unit = useInches ? 'in' : 'mm';
+  document.getElementById('widthLabel').textContent = 'Width (' + unit + ')';
+  document.getElementById('heightLabel').textContent = 'Height (' + unit + ')';
+  
+  const widthInput = document.getElementById('width');
+  const heightInput = document.getElementById('height');
+  widthInput.step = useInches ? '0.01' : '1';
+  heightInput.step = useInches ? '0.01' : '1';
+  widthInput.placeholder = 'Enter width in ' + unit;
+  heightInput.placeholder = 'Enter height in ' + unit;
+  
+  // Convert displayed values
+  if (useInches) {
+    if (widthInput.value) widthInput.value = Math.round((parseFloat(widthInput.value) / 25.4) * 100) / 100;
+    if (heightInput.value) heightInput.value = Math.round((parseFloat(heightInput.value) / 25.4) * 100) / 100;
+  } else {
+    if (widthInput.value) widthInput.value = Math.round(parseFloat(widthInput.value) * 25.4);
+    if (heightInput.value) heightInput.value = Math.round(parseFloat(heightInput.value) * 25.4);
+  }
+}
+
+function onOptionChange(which) {
+  if (which === 'reverse' && document.getElementById('reverseEtched').checked) {
+    document.getElementById('etchedPhoto').checked = false;
+  }
+  if (which === 'photo' && document.getElementById('etchedPhoto').checked) {
+    document.getElementById('reverseEtched').checked = false;
+  }
+}
+
+function getDiscountType() { return document.querySelector('input[name="discountType"]:checked').value; }
+function getMiscType() { return document.querySelector('input[name="miscType"]:checked').value; }
+
+function checkDimensionAdvisory() {
+  const wMm = getWidthMm();
+  const hMm = getHeightMm();
+  const advisory = document.getElementById('dimAdvisory');
+  if (advisory) {
+    advisory.style.display = (wMm > 610 || hMm > 610) ? 'block' : 'none';
+  }
+}
+
+function recalc() {
+  const wMm = getWidthMm();
+  const hMm = getHeightMm();
+  if (wMm <= 0 || hMm <= 0) return;
+  
+  validateDimensions();
+  checkDimensionAdvisory();
+  
+  const material = document.getElementById('material').value;
+  const thickness = parseFloat(document.getElementById('thickness').value);
+  const quantity = parseInt(document.getElementById('quantity').value) || 1;
+  const reverseEtched = document.getElementById('reverseEtched').checked;
+  const etchedPhoto = document.getElementById('etchedPhoto').checked;
+  const discountValue = parseFloat(document.getElementById('discountValue').value) || 0;
+  const discountType = getDiscountType();
+  const miscValue = parseFloat(document.getElementById('miscValue').value) || 0;
+  const miscType = getMiscType();
+  const primerTax = 0;
+  
+  const unitPrice = calculateUnitPrice(wMm, hMm, material, thickness, currentPrintType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTax);
+  const total = Math.round(unitPrice * quantity * 100) / 100;
+  
+  document.getElementById('singlePrice').textContent = formatCurrency(unitPrice);
+  document.getElementById('totalPrice').textContent = formatCurrency(total);
+}
+
+function recalcLaser() {
+  const price = parseFloat(document.getElementById('laserPrice').value) || 0;
+  const qty = parseInt(document.getElementById('laserQuantity').value) || 1;
+  document.getElementById('laserSinglePrice').textContent = formatCurrency(price);
+  document.getElementById('laserTotalPrice').textContent = formatCurrency(Math.round(price * qty * 100) / 100);
+}
+
+function calcPrices() { recalc(); }
+
+function resetForm() {
+  document.getElementById('material').value = 'stainless_steel';
+  document.getElementById('thickness').value = '1.5';
+  document.getElementById('width').value = '';
+  document.getElementById('height').value = '';
+  document.getElementById('quantity').value = '1';
+  document.getElementById('reverseEtched').checked = false;
+  document.getElementById('etchedPhoto').checked = false;
+  document.querySelector('input[name="discountType"][value="percentage"]').checked = true;
+  document.getElementById('discountValue').value = '10';
+  document.querySelector('input[name="miscType"][value="fixed"]').checked = true;
+  document.getElementById('miscValue').value = '';
+    document.getElementById('notes').value = '';
+  document.getElementById('singlePrice').textContent = '£0.00';
+  document.getElementById('totalPrice').textContent = '£0.00';
+  document.getElementById('dimWarning').style.display = 'none';
+}
+
+function copyCalc() {
+  const text = `Print Type: ${currentPrintType}\nMaterial: ${document.getElementById('material').value.replace(/_/g,' ')}\nThickness: ${document.getElementById('thickness').value}mm\nWidth: ${getWidthMm()}mm\nHeight: ${getHeightMm()}mm\nQuantity: ${document.getElementById('quantity').value}\nSingle Price: ${document.getElementById('singlePrice').textContent}\nTotal Price: ${document.getElementById('totalPrice').textContent}`;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+// ============================
+// QUOTE ITEMS MANAGEMENT
+// ============================
+function addToQuote() {
+  const wMm = getWidthMm();
+  const hMm = getHeightMm();
+  if (wMm <= 0 || hMm <= 0) return alert('Please enter valid dimensions');
+  if (validateDimensions()) return alert('Dimensions exceed material limits');
+  
+  const material = document.getElementById('material').value;
+  const thickness = parseFloat(document.getElementById('thickness').value);
+  const quantity = parseInt(document.getElementById('quantity').value) || 1;
+  const reverseEtched = document.getElementById('reverseEtched').checked;
+  const etchedPhoto = document.getElementById('etchedPhoto').checked;
+  const discountValue = parseFloat(document.getElementById('discountValue').value) || 0;
+  const discountType = getDiscountType();
+  const miscValue = parseFloat(document.getElementById('miscValue').value) || 0;
+  const miscType = getMiscType();
+  const primerTax = 0;
+  const notes = document.getElementById('notes').value.trim();
+  
+  const unitPrice = calculateUnitPrice(wMm, hMm, material, thickness, currentPrintType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTax);
+  const totalPrice = Math.round(unitPrice * quantity * 100) / 100;
+  
+  const dimText = useInches 
+    ? `${Math.round((wMm/25.4)*100)/100}x${Math.round((hMm/25.4)*100)/100}in`
+    : `${Math.round(wMm)}x${Math.round(hMm)}mm`;
+  const description = `${currentPrintType} ${material.replace(/_/g, ' ')} ${thickness}mm - ${dimText}`;
+  
+  quoteItems.push({
+    id: 'item-' + (++itemIdCounter),
+    description,
+    printType: currentPrintType,
+    quantity,
+    unitPrice,
+    totalPrice,
+    notes: notes || undefined,
+    isLaserMisc: false,
+    markup: 0,
+  });
+  
+  renderQuoteItems();
+  recalcTotals();
+}
+
+function addLaserToQuote() {
+  const details = document.getElementById('laserDetails').value.trim();
+  const price = parseFloat(document.getElementById('laserPrice').value) || 0;
+  const qty = parseInt(document.getElementById('laserQuantity').value) || 1;
+  const notes = document.getElementById('laserNotes').value.trim();
+  
+  if (!details) return alert('Please enter details');
+  if (price <= 0) return alert('Please enter a valid price');
+  
+  quoteItems.push({
+    id: 'item-' + (++itemIdCounter),
+    description: details,
+    printType: 'Laser/Misc',
+    quantity: qty,
+    unitPrice: price,
+    totalPrice: Math.round(price * qty * 100) / 100,
+    notes: notes || undefined,
+    isLaserMisc: true,
+    markup: 0,
+  });
+  
+  renderQuoteItems();
+  recalcTotals();
+}
+
+function removeItem(id) {
+  quoteItems = quoteItems.filter(i => i.id !== id);
+  renderQuoteItems();
+  recalcTotals();
+}
+
+function startEditItem(id) {
+  const item = quoteItems.find(i => i.id === id);
+  if (!item) return;
+  item._editing = true;
+  renderQuoteItems();
+}
+
+function saveEditItem(id) {
+  const item = quoteItems.find(i => i.id === id);
+  if (!item) return;
+  
+  item.quantity = parseInt(document.getElementById('eq-' + id).value) || 1;
+  item.unitPrice = parseFloat(document.getElementById('eu-' + id).value) || 0;
+  item.description = document.getElementById('ed-' + id).value;
+  item.notes = document.getElementById('en-' + id).value.trim() || undefined;
+  if (!item.isLaserMisc) {
+    item.markup = parseFloat(document.getElementById('em-' + id).value) || 0;
+  }
+  
+  let adjustedPrice = item.unitPrice;
+  if (item.markup) adjustedPrice = item.unitPrice * (1 + item.markup / 100);
+  item.totalPrice = Math.round(adjustedPrice * item.quantity * 100) / 100;
+  
+  delete item._editing;
+  renderQuoteItems();
+  recalcTotals();
+}
+
+function cancelEditItem(id) {
+  const item = quoteItems.find(i => i.id === id);
+  if (item) delete item._editing;
+  renderQuoteItems();
+}
+
+function renderQuoteItems() {
+  const container = document.getElementById('quoteItemsContainer');
+  const empty = document.getElementById('emptyState');
+  
+  if (quoteItems.length === 0) {
+    container.innerHTML = '<div class="empty-state" id="emptyState"><p>No items added yet</p><p class="sub">Use the calculator to add items</p></div>';
+    updateButtonStates();
+    return;
+  }
+  
+  let html = '';
+  quoteItems.forEach((item, idx) => {
+    if (item._editing) {
+      html += `<div class="quote-item" style="background:#eff6ff; border-color:#c4b5fd;">
+        <div class="quote-item-header">
+          <span class="quote-item-number">Item #${idx + 1}</span>
+          <div>
+            <button class="btn btn-sm btn-primary" onclick="saveEditItem('${item.id}')" style="margin-right:4px;">✓ Save</button>
+            <button class="btn btn-sm btn-secondary" onclick="cancelEditItem('${item.id}')">✕ Cancel</button>
+          </div>
+        </div>
+        <div class="edit-row" style="margin-bottom:8px;">
+          <div><span class="quote-item-label">Qty</span><input type="number" class="input-field" id="eq-${item.id}" value="${item.quantity}" min="1" style="padding:4px 8px;font-size:13px;"></div>
+          <div><span class="quote-item-label">Unit Price</span><input type="number" class="input-field" id="eu-${item.id}" value="${item.unitPrice}" step="0.01" style="padding:4px 8px;font-size:13px;"></div>
+          ${!item.isLaserMisc ? `<div><span class="quote-item-label">Markup %</span><input type="number" class="input-field" id="em-${item.id}" value="${item.markup||0}" step="1" style="padding:4px 8px;font-size:13px;"></div>` : '<div></div>'}
+          <div><span class="quote-item-label">Total</span><span class="quote-item-value">${formatCurrency(item.totalPrice)}</span></div>
+        </div>
+        <div style="margin-bottom:8px;"><span class="quote-item-label">Description</span><textarea class="input-field" id="ed-${item.id}" style="min-height:60px;font-size:13px;">${item.description}</textarea></div>
+        <div><span class="quote-item-label">Notes</span><textarea class="input-field" id="en-${item.id}" style="min-height:60px;font-size:13px;" placeholder="Add notes...">${item.notes||''}</textarea></div>
+      </div>`;
+    } else {
+      html += `<div class="quote-item">
+        <div class="quote-item-header">
+          <span class="quote-item-number">Item #${idx + 1}</span>
+          <div>
+            <button class="btn btn-sm btn-secondary" onclick="startEditItem('${item.id}')" style="margin-right:4px;">✏️ Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="removeItem('${item.id}')">🗑</button>
+          </div>
+        </div>
+        <div class="quote-item-grid">
+          <div><span class="quote-item-label">Qty</span><div class="quote-item-value">${item.quantity}</div></div>
+          <div><span class="quote-item-label">Description</span><div class="quote-item-value" style="white-space:pre-line;">${item.description}</div></div>
+          <div><span class="quote-item-label">Unit Price</span><div class="quote-item-value">${formatCurrency(item.unitPrice)}</div></div>
+          <div><span class="quote-item-label">Total</span><div class="quote-item-value">${formatCurrency(item.totalPrice)}</div></div>
+        </div>
+        ${item.notes ? `<div style="margin-top:6px;"><span class="quote-item-label">Notes</span><div style="font-size:13px;font-style:italic;color:#6b7280;white-space:pre-line;">${item.notes}</div></div>` : ''}
+        ${!item.isLaserMisc && item.markup ? `<div style="margin-top:4px;"><span class="quote-item-label">Markup: ${item.markup}%</span></div>` : ''}
+      </div>`;
+    }
+  });
+  
+  container.innerHTML = html;
+  updateButtonStates();
+}
+
+function updateButtonStates() {
+  const hasItems = quoteItems.length > 0;
+  document.getElementById('downloadPdfBtn').disabled = !hasItems;
+  document.getElementById('copyOrderRequestBtn').disabled = !hasItems;
+  document.getElementById('clearAllBtn').disabled = !hasItems;
+}
+
+function recalcTotals() {
+  const subtotal = quoteItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const deliveryCost = parseFloat(document.getElementById('deliveryCost').value) || 0;
+  const vat = vatEnabled ? Math.round(0.2 * (subtotal + deliveryCost) * 100) / 100 : 0;
+  const total = Math.round((subtotal + deliveryCost + vat) * 100) / 100;
+  
+  document.getElementById('subtotalDisplay').textContent = formatCurrency(subtotal);
+  document.getElementById('vatDisplay').textContent = formatCurrency(vat);
+  document.getElementById('totalDisplay').textContent = formatCurrency(total);
+}
+
+function toggleVat() {
+  vatEnabled = !vatEnabled;
+  const sw = document.getElementById('vatSwitch');
+  sw.classList.toggle('on', vatEnabled);
+  document.getElementById('vatLabel').textContent = vatEnabled ? 'VAT Included (20%):' : 'VAT (Disabled):';
+  document.getElementById('vatStatusText').textContent = vatEnabled ? 'VAT ON' : 'Export - No VAT';
+  recalcTotals();
+}
+
+function toggleGlobalMarkup() {
+  const el = document.getElementById('globalMarkupEnabled'); if (!el) return; const enabled = el.checked;
+  const fields = document.getElementById('globalMarkupFields'); if (fields) fields.style.display = enabled ? 'block' : 'none';
+  if (!enabled) {
+    // Reset markup on all items
+    quoteItems.forEach(item => { item.markup = 0; item.totalPrice = Math.round(item.unitPrice * item.quantity * 100) / 100; });
+    renderQuoteItems();
+    recalcTotals();
+  }
+}
+
+function applyGlobalMarkup() {
+  const mkEl = document.getElementById('globalMarkupValue'); if (!mkEl) return; const markup = parseFloat(mkEl.value) || 0;
+  quoteItems.forEach(item => {
+    item.markup = markup;
+    const adj = item.unitPrice * (1 + markup / 100);
+    item.totalPrice = Math.round(adj * item.quantity * 100) / 100;
+  });
+  renderQuoteItems();
+  recalcTotals();
+}
+
+function setDeliveryTab(tab) {
+  deliveryTab = tab;
+  document.getElementById('tabStandard').classList.toggle('active', tab === 'standard');
+  document.getElementById('tabDate').classList.toggle('active', tab === 'date');
+  document.getElementById('standardDelivery').style.display = tab === 'standard' ? 'block' : 'none';
+  document.getElementById('dateDelivery').style.display = tab === 'date' ? 'block' : 'none';
+}
+
+function copyOrderRequest() {
+  const subtotal = quoteItems.reduce((sum, i) => sum + i.totalPrice, 0);
+  const delivery = parseFloat(document.getElementById('deliveryCost').value) || 0;
+  const vat = vatEnabled ? Math.round(0.2 * (subtotal + delivery) * 100) / 100 : 0;
+  const total = Math.round((subtotal + delivery + vat) * 100) / 100;
+  
+  let text = `Order Request: ${quoteNumber}\nCustomer: JFK Signs\n\n`;
+  quoteItems.forEach((item, i) => {
+    text += `${i+1}. ${item.description} — Qty: ${item.quantity} — Unit: ${formatCurrency(item.unitPrice)} — Total: ${formatCurrency(item.totalPrice)}\n`;
+    if (item.notes) text += `   Notes: ${item.notes}\n`;
+  });
+  text += `\nSubtotal: ${formatCurrency(subtotal)}\nDelivery: ${formatCurrency(delivery)}\nVAT: ${formatCurrency(vat)}\nTotal: ${formatCurrency(total)}`;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function clearAll() {
+  if (!confirm('Clear all items?')) return;
+  quoteItems = [];
+  quoteNumber = generateQuoteNumber();
+  renderQuoteItems();
+  recalcTotals();
+}
+
+// ============================
+// PDF GENERATION (matching pdfGenerator.ts)
+// ============================
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFont('helvetica', 'normal');
+  
+  // Company logo placeholder area (top right)
+  // doc.addImage would go here if you had the logo base64
+  
+  // Company info (right side)
+  doc.setFontSize(10);
+  let cY = 40;
+  ['Trade Etching Direct Ltd','Unit M Edison Courtyard','Brunel Road','Earlstrees Ind Estate','Corby','NN17 4LS','01536 203813','sales@tradeetching.com'].forEach(line => {
+    doc.text(line, 150, cY); cY += 5;
+  });
+  
+  // Customer info (left side)
+  doc.setFontSize(12);
+  doc.text('Order Request For:', 14, 20);
+  doc.setFontSize(10);
+  doc.text('JFK Signs', 14, 26);
+  
+  // Date and quote number
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB');
+  const ref = document.getElementById('reference').value.trim();
+  const startInfoY = Math.max(cY, 36);
+  doc.text('Date: ' + dateStr, 14, startInfoY + 5);
+  const qnText = ref ? `Order Request Number: ${quoteNumber} | Ref: ${ref}` : `Order Request Number: ${quoteNumber}`;
+  doc.text(qnText, 14, startInfoY + 10);
+  
+  // Divider
+  const divY = startInfoY + 15;
+  doc.setDrawColor(124, 58, 237);
+  doc.setLineWidth(0.5);
+  doc.line(14, divY, 196, divY);
+  
+  // Prepare table
+  const subtotal = quoteItems.reduce((s, i) => s + i.totalPrice, 0);
+  const delivery = parseFloat(document.getElementById('deliveryCost').value) || 0;
+  const vat = vatEnabled ? Math.round(0.2 * (subtotal + delivery) * 100) / 100 : 0;
+  const total = Math.round((subtotal + delivery + vat) * 100) / 100;
+  const turnaround = deliveryTab === 'date' 
+    ? '' 
+    : document.getElementById('turnaroundTime').value;
+  const isDeliveryTBA = turnaround === 'Delivery and turnaround to be agreed';
+  
+  const body = quoteItems.map((item, i) => {
+    const desc = item.notes ? item.description + '\n\n' + item.notes : item.description;
+    return [String(i+1), desc, String(item.quantity), formatCurrency(item.unitPrice), formatCurrency(item.totalPrice)];
+  });
+  
+  body.push(['', 'Subtotal', '', '', formatCurrency(subtotal)]);
+  body.push(['', 'Delivery Cost', '', '', isDeliveryTBA ? 'To be agreed' : formatCurrency(delivery)]);
+  body.push(['', 'VAT (20%)', '', '', formatCurrency(vat)]);
+  body.push(['', 'Total', '', '', formatCurrency(total)]);
+  
+  doc.autoTable({
+    startY: divY + 10,
+    head: [['Item', 'Description', 'Quantity', 'Unit Price', 'Total']],
+    body: body,
+    styles: { fontSize: 10, cellPadding: 3 },
+    headStyles: { fillColor: [8, 153, 226], textColor: [255, 255, 255], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 15, halign: 'center' },
+      1: { cellWidth: 'auto', halign: 'left' },
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 30, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
+    },
+    didParseCell: function(data) {
+      const label = data.row.raw[1];
+      if (['Subtotal', 'Delivery Cost', 'VAT (20%)', 'Total'].includes(label)) {
+        data.cell.styles.fontStyle = 'bold';
+        if (data.column.index === 4) data.cell.styles.textColor = [8, 153, 226];
+      }
+    }
+  });
+  
+  let afterTableY = doc.lastAutoTable.finalY + 10;
+  
+  // Turnaround / delivery date
+  if (deliveryTab === 'date') {
+    const dateVal = document.getElementById('specificDate').value;
+    if (dateVal) {
+      const d = new Date(dateVal);
+      doc.text('Specific Delivery Date: ' + d.toLocaleDateString('en-GB'), 14, afterTableY);
+    }
+  } else {
+    doc.text('Turnaround Time: ' + turnaround, 14, afterTableY);
+  }
+  afterTableY += 10;
+  
+  // Additional notes
+  const addNotes = document.getElementById('additionalNotes').value.trim();
+  if (addNotes) {
+    doc.text('Additional Notes:', 14, afterTableY);
+    afterTableY += 5;
+    const split = doc.splitTextToSize(addNotes, 180);
+    doc.text(split, 14, afterTableY);
+    afterTableY += split.length * 5 + 10;
+  }
+  
+  // Disclaimers
+  doc.setFontSize(8);
+  const disclaimers = [
+    'Please read the following information:',
+    '• *QUOTE MUST BE SENT BACK WHEN PLACING ORDER*',
+    '• Please note we now have a £25 minimum charge on all Invoices.',
+    '• Please confirm any pantone or RAL colours needed; if not, we will go by the artwork given as we see it.',
+    '• If specific hole centres are required, please ensure this is on the order in writing.',
+    '• All orders must have artwork and any delivery notes attached.',
+    '• All artwork MUST be saved as CURVES.',
+    '• Any special delivery date requests must be made by email at the time of ordering.',
+    '• Quote valid for 30 days.'
+  ];
+  disclaimers.forEach(line => { doc.text(line, 14, afterTableY); afterTableY += 5; });
+  
+  // Subject to confirmation notice
+  afterTableY += 5;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('This order request is subject to confirmation by Trade Etching Direct Ltd.', 14, afterTableY);
+  doc.setFont('helvetica', 'normal');
+  
+  // Download
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Order_Request_JFK Signs_' + quoteNumber + '.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================
+// INIT: Set discount to 10% by default
+// ============================
+document.addEventListener('DOMContentLoaded', function() {
+  // Set discount to percentage mode with value 10
+  document.querySelector('input[name="discountType"][value="percentage"]').checked = true;
+  document.getElementById('discountValue').value = '10';
+});
+</script>
+</body>
+</html>
