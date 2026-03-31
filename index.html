@@ -502,7 +502,6 @@ function formatCurrency(value) {
 
 function calculateAreaInches(wMm, hMm) { return (wMm / 25.4) * (hMm / 25.4); }
 function calculateBasePrice(areaInches) { return (areaInches * 0.4) + 10; }
-function calculatePrimerTax(wMm, hMm) { return Math.round(wMm * hMm * 0.000029484 * 100) / 100; }
 
 function calculateUnitPrice(wMm, hMm, material, thickness, printType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTaxAmount) {
   const areaInches = calculateAreaInches(wMm, hMm);
@@ -671,7 +670,7 @@ function recalc() {
   const discountType = getDiscountType();
   const miscValue = parseFloat(document.getElementById('miscValue').value) || 0;
   const miscType = getMiscType();
-  const primerTax = calculatePrimerTax(wMm, hMm);
+  const primerTax = 0;
   
   const unitPrice = calculateUnitPrice(wMm, hMm, material, thickness, currentPrintType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTax);
   const total = Math.round(unitPrice * quantity * 100) / 100;
@@ -730,7 +729,7 @@ function addToQuote() {
   const discountType = getDiscountType();
   const miscValue = parseFloat(document.getElementById('miscValue').value) || 0;
   const miscType = getMiscType();
-  const primerTax = calculatePrimerTax(wMm, hMm);
+  const primerTax = 0;
   const notes = document.getElementById('notes').value.trim();
   
   const unitPrice = calculateUnitPrice(wMm, hMm, material, thickness, currentPrintType, reverseEtched, etchedPhoto, discountValue, discountType, miscValue, miscType, primerTax);
