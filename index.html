@@ -213,10 +213,10 @@
   <div id="spreadsheetView" style="display:none;width:100%;max-width:900px;margin:0 auto;">
     <div class="section">
       <h3>Quick Price Grid</h3>
-      <div style="display:flex;gap:12px;align-items:end;margin-bottom:16px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:120px;"><label>Width</label><input type="number" class="input-field" id="spreadsheetWidth" placeholder="0" oninput="updateSpreadsheet()"></div>
-        <div style="flex:1;min-width:120px;"><label>Height</label><input type="number" class="input-field" id="spreadsheetHeight" placeholder="0" oninput="updateSpreadsheet()"></div>
-        <button onclick="toggleSpreadsheetUnits()" id="spreadsheetUnitBtn" style="padding:12px 16px;border:1px solid #e5e7eb;background:#fff;border-radius:6px;cursor:pointer;font-size:14px;color:#6b7280;">mm</button>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Width</label><div style="display:flex;gap:4px;"><input type="number" class="input-field" id="spreadsheetWidth" placeholder="0" oninput="updateSpreadsheet()" style="flex:1;"><span style="background:#f3f4f6;padding:12px 8px;border-radius:6px;font-size:13px;color:#6b7280;min-width:30px;text-align:center;" id="spreadsheetWidthUnit">mm</span></div></div>
+        <div style="flex:1;"><label>Height</label><div style="display:flex;gap:4px;"><input type="number" class="input-field" id="spreadsheetHeight" placeholder="0" oninput="updateSpreadsheet()" style="flex:1;"><span style="background:#f3f4f6;padding:12px 8px;border-radius:6px;font-size:13px;color:#6b7280;min-width:30px;text-align:center;" id="spreadsheetHeightUnit">mm</span></div></div>
+        <button onclick="toggleSpreadsheetUnits()" id="spreadsheetUnitBtn" style="padding:12px 16px;border:1px solid #e5e7eb;background:#fff;border-radius:6px;cursor:pointer;font-size:13px;color:#6b7280;min-width:50px;">mm ↔ in</button>
       </div>
       <div id="spreadsheetTables"></div>
     </div>
@@ -1144,8 +1144,13 @@ function toggleSpreadsheetUnits() {
   const btn = document.getElementById("spreadsheetUnitBtn");
   const wInput = document.getElementById("spreadsheetWidth");
   const hInput = document.getElementById("spreadsheetHeight");
+  const wUnit = document.getElementById("spreadsheetWidthUnit");
+  const hUnit = document.getElementById("spreadsheetHeightUnit");
   
-  btn.textContent = spreadsheetUseInches ? 'in' : 'mm';
+  const unit = spreadsheetUseInches ? 'in' : 'mm';
+  btn.textContent = unit + ' ↔ ' + (spreadsheetUseInches ? 'mm' : 'in');
+  wUnit.textContent = unit;
+  hUnit.textContent = unit;
   
   // Convert values if switching
   if (spreadsheetUseInches && wInput.value) {
@@ -1177,28 +1182,35 @@ function updateSpreadsheet() {
   }
   
   const areaInches = calculateAreaInches(wMm, hMm);
-  const basePrice = calculateBasePrice(areaInches);
+  // If dimensions are 0, set base price to 0 so all prices show as £0.00
+  const basePrice = (wMm <= 0 || hMm <= 0) ? 0 : calculateBasePrice(areaInches);
   const materials = ["stainless_steel", "mirror_stainless", "brass", "bronzed_brass"];
   const materialNames = {"stainless_steel":"Stainless Steel","mirror_stainless":"Mirror Stainless","brass":"Brass","bronzed_brass":"Bronzed Brass"};
   
-  // Etched table
+  // Etched table with Reverse Etched for 2mm & 3mm
   let html = '<h4 style="margin:16px 0 8px 0;color:#7c3aed;">Etched</h4>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">';
-  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">3mm</th></tr>';
+  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">2mm Rev</th><th style="padding:8px;text-align:right;">3mm</th><th style="padding:8px;text-align:right;">3mm Rev</th></tr>';
   
   materials.forEach(mat => {
     let row = [materialNames[mat]];
-    [1.5, 2, 3].forEach(thick => {
-      let price = basePrice * etchedMultiplierMap[mat][[1.5,2,3].indexOf(thick)];
+    [1.5, 2, 3].forEach((thick, idx) => {
+      let price = basePrice * etchedMultiplierMap[mat][idx];
       price = price * 0.9091;
       row.push(formatCurrency(Math.round(price * 100) / 100));
+      
+      // Add reverse etched for 2mm and 3mm
+      if (thick === 2 || thick === 3) {
+        let revPrice = basePrice * etchedMultiplierMap[mat][idx] * 1.3 * 0.9091;
+        row.push(formatCurrency(Math.round(revPrice * 100) / 100));
+      }
     });
-    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;">' + row[3] + '</td></tr>';
+    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;">' + row[3] + '</td><td style="padding:8px;text-align:right;">' + row[4] + '</td><td style="padding:8px;text-align:right;color:#7c3aed;">' + row[5] + '</td></tr>';
   });
   html += '</table>';
   
   // UV Printed table
-  html += '<h4 style="margin:16px 0 8px 0;color:#7c3aed;">UV Printed</h4>';
+  html += '<h4 style="margin:24px 0 8px 0;color:#7c3aed;">UV Printed</h4>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
   html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">3mm</th></tr>';
   
