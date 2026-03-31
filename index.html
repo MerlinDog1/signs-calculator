@@ -203,21 +203,22 @@
 <div class="container">
   
   
-  <div id="spreadsheetView" style="display:none;width:100%;max-width:900px;margin:0 auto;">
-    <div class="section">
-      <h3>Quick Price Grid</h3>
-      <div class="grid-2" style="margin-bottom:16px;">
-        <div><label>Width (mm)</label><input type="number" class="input-field" id="spreadsheetWidth" placeholder="Enter width" oninput="updateSpreadsheet()"></div>
-        <div><label>Height (mm)</label><input type="number" class="input-field" id="spreadsheetHeight" placeholder="Enter height" oninput="updateSpreadsheet()"></div>
-      </div>
-      <div id="spreadsheetTables" style="min-height:200px;"></div>
-    </div>
-  </div>
-
-  <div style="display:flex;justify-content:center;margin-bottom:24px;">
+  <div style="display:flex;justify-content:center;padding:16px 0;background:#fff;position:sticky;top:0;z-index:100;border-bottom:1px solid #e5e7eb;margin:0 -24px 16px -24px;">
     <div style="display:flex;background:#f3f4f6;border-radius:12px;padding:4px;gap:4px;">
       <button id="calcToggle" onclick="showCalculator()" style="padding:12px 32px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;background:#7c3aed;color:#fff;transition:all 0.2s;">Calculator</button>
       <button id="gridToggle" onclick="showGrid()" style="padding:12px 32px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;background:transparent;color:#6b7280;transition:all 0.2s;">Grid View</button>
+    </div>
+  </div>
+
+  <div id="spreadsheetView" style="display:none;width:100%;max-width:900px;margin:0 auto;">
+    <div class="section">
+      <h3>Quick Price Grid</h3>
+      <div style="display:flex;gap:12px;align-items:end;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;"><label>Width</label><input type="number" class="input-field" id="spreadsheetWidth" placeholder="0" oninput="updateSpreadsheet()"></div>
+        <div style="flex:1;min-width:120px;"><label>Height</label><input type="number" class="input-field" id="spreadsheetHeight" placeholder="0" oninput="updateSpreadsheet()"></div>
+        <button onclick="toggleSpreadsheetUnits()" id="spreadsheetUnitBtn" style="padding:12px 16px;border:1px solid #e5e7eb;background:#fff;border-radius:6px;cursor:pointer;font-size:14px;color:#6b7280;">mm</button>
+      </div>
+      <div id="spreadsheetTables"></div>
     </div>
   </div>
 
@@ -1136,14 +1137,43 @@ function toggleSpreadsheetView() {
   }
 }
 
+let spreadsheetUseInches = false;
+
+function toggleSpreadsheetUnits() {
+  spreadsheetUseInches = !spreadsheetUseInches;
+  const btn = document.getElementById("spreadsheetUnitBtn");
+  const wInput = document.getElementById("spreadsheetWidth");
+  const hInput = document.getElementById("spreadsheetHeight");
+  
+  btn.textContent = spreadsheetUseInches ? 'in' : 'mm';
+  
+  // Convert values if switching
+  if (spreadsheetUseInches && wInput.value) {
+    wInput.value = Math.round(parseFloat(wInput.value) / 25.4 * 100) / 100;
+    hInput.value = Math.round(parseFloat(hInput.value) / 25.4 * 100) / 100;
+  } else if (!spreadsheetUseInches && wInput.value) {
+    wInput.value = Math.round(parseFloat(wInput.value) * 25.4);
+    hInput.value = Math.round(parseFloat(hInput.value) * 25.4);
+  }
+  
+  updateSpreadsheet();
+}
+
 function updateSpreadsheet() {
-  const wMm = parseFloat(document.getElementById("spreadsheetWidth").value) || 0;
-  const hMm = parseFloat(document.getElementById("spreadsheetHeight").value) || 0;
+  let wInput = parseFloat(document.getElementById("spreadsheetWidth").value) || 0;
+  let hInput = parseFloat(document.getElementById("spreadsheetHeight").value) || 0;
   const container = document.getElementById("spreadsheetTables");
   
-  if (wMm <= 0 || hMm <= 0) {
-    container.innerHTML = '<p style="color:#6b7280;">Enter dimensions to see prices</p>';
-    return;
+  // Convert to mm if in inches mode
+  const wMm = spreadsheetUseInches ? wInput * 25.4 : wInput;
+  const hMm = spreadsheetUseInches ? hInput * 25.4 : hInput;
+  
+  // Always show the grid, even if dimensions are 0
+  if (wMm <= 0 && hMm <= 0) {
+    // Show placeholder message but still render tables
+    container.innerHTML = '<p style="color:#9ca3af;font-size:13px;margin-bottom:16px;">Enter dimensions to see prices</p>';
+  } else {
+    container.innerHTML = '';
   }
   
   const areaInches = calculateAreaInches(wMm, hMm);
