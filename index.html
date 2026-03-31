@@ -218,9 +218,22 @@
           <button class="toggle-btn active" onclick="setPrintType('Etched')">Etched</button>
           <button class="toggle-btn" onclick="setPrintType('UV Printed')">UV Printed</button>
           <button class="toggle-btn" onclick="setPrintType('Laser/Misc')">Laser/Misc</button>
+          <button class="toggle-btn" id="spreadsheetToggle" onclick="toggleSpreadsheetView()">📊 Grid</button>
         </div>
       </div>
-      
+
+      <!-- Spreadsheet View -->
+      <div id="spreadsheetView" style="display:none;">
+        <div class="section">
+          <h3>Quick Price Grid</h3>
+          <div class="grid-2" style="margin-bottom:16px;">
+            <div><label>Width (mm)</label><input type="number" class="input-field" id="spreadsheetWidth" placeholder="Enter width" oninput="updateSpreadsheet()"></div>
+            <div><label>Height (mm)</label><input type="number" class="input-field" id="spreadsheetHeight" placeholder="Enter height" oninput="updateSpreadsheet()"></div>
+          </div>
+          <div id="spreadsheetTables"></div>
+        </div>
+      </div>
+
       <!-- Standard Form -->
       <div id="standardForm">
         <!-- Material & Thickness -->
@@ -1096,6 +1109,80 @@ function generatePDF() {
 }
 
 // ============================
+
+// ============================
+// SPREADSHEET VIEW
+// ============================
+
+function toggleSpreadsheetView() {
+  const standardForm = document.getElementById("standardForm");
+  const laserForm = document.getElementById("laserForm");
+  const spreadsheetView = document.getElementById("spreadsheetView");
+  const btn = document.getElementById("spreadsheetToggle");
+  
+  if (spreadsheetView.style.display !== "none") {
+    spreadsheetView.style.display = "none";
+    standardForm.style.display = "block";
+    laserForm.style.display = "none";
+    btn.classList.remove("active");
+  } else {
+    spreadsheetView.style.display = "block";
+    standardForm.style.display = "none";
+    laserForm.style.display = "none";
+    btn.classList.add("active");
+  }
+}
+
+function updateSpreadsheet() {
+  const wMm = parseFloat(document.getElementById("spreadsheetWidth").value) || 0;
+  const hMm = parseFloat(document.getElementById("spreadsheetHeight").value) || 0;
+  const container = document.getElementById("spreadsheetTables");
+  
+  if (wMm <= 0 || hMm <= 0) {
+    container.innerHTML = '<p style="color:#6b7280;">Enter dimensions to see prices</p>';
+    return;
+  }
+  
+  const areaInches = calculateAreaInches(wMm, hMm);
+  const basePrice = calculateBasePrice(areaInches);
+  const materials = ["stainless_steel", "mirror_stainless", "brass", "bronzed_brass"];
+  const materialNames = {"stainless_steel":"Stainless Steel","mirror_stainless":"Mirror Stainless","brass":"Brass","bronzed_brass":"Bronzed Brass"};
+  
+  // Etched table
+  let html = '<h4 style="margin:16px 0 8px 0;color:#7c3aed;">Etched</h4>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">';
+  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">3mm</th></tr>';
+  
+  materials.forEach(mat => {
+    let row = [materialNames[mat]];
+    [1.5, 2, 3].forEach(thick => {
+      let price = basePrice * etchedMultiplierMap[mat][[1.5,2,3].indexOf(thick)];
+      price = price * 0.9091;
+      row.push(formatCurrency(Math.round(price * 100) / 100));
+    });
+    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;">' + row[3] + '</td></tr>';
+  });
+  html += '</table>';
+  
+  // UV Printed table
+  html += '<h4 style="margin:16px 0 8px 0;color:#7c3aed;">UV Printed</h4>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html += '<tr style="background:#7c3aed;color:#fff;"><th style="padding:8px;text-align:left;">Material</th><th style="padding:8px;text-align:right;">1.5mm</th><th style="padding:8px;text-align:right;">2mm</th><th style="padding:8px;text-align:right;">3mm</th></tr>';
+  
+  materials.forEach(mat => {
+    let row = [materialNames[mat]];
+    [1.5, 2, 3].forEach(thick => {
+      let price = basePrice * uvMultiplierMap[mat][[1.5,2,3].indexOf(thick)];
+      price = price * 0.9091;
+      row.push(formatCurrency(Math.round(price * 100) / 100));
+    });
+    html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;">' + row[0] + '</td><td style="padding:8px;text-align:right;">' + row[1] + '</td><td style="padding:8px;text-align:right;">' + row[2] + '</td><td style="padding:8px;text-align:right;">' + row[3] + '</td></tr>';
+  });
+  html += '</table>';
+  
+  container.innerHTML = html;
+}
+
 // INIT: Set discount to 10% by default
 // ============================
 document.addEventListener('DOMContentLoaded', function() {
