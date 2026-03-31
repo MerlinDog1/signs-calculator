@@ -288,8 +288,8 @@
           </div>
         </div>
         
-        <!-- Discount & Charges -->
-        <div class="section">
+        <!-- Discount & Charges --><!-- HIDDEN -->
+        <div class="section" style="display:none;">
           <h3>Discount & Charges</h3>
           <div class="grid-2">
             <div>
@@ -298,7 +298,7 @@
                 <label class="radio-label"><input type="radio" name="discountType" value="fixed" checked onchange="recalc()"> Fixed (£)</label>
                 <label class="radio-label"><input type="radio" name="discountType" value="percentage" onchange="recalc()"> Percentage (%)</label>
               </div>
-              <input type="number" class="input-field" id="discountValue" min="0" value="10" step="0.01" oninput="recalc()">
+              <input type="number" class="input-field" id="discountValue" min="0" value="9.09" step="0.01" oninput="recalc()">
             </div>
             <div>
               <div style="font-size:13px; font-weight:500; color:#374151; margin-bottom:8px;">Misc Charge</div>
@@ -315,7 +315,7 @@
         </div>
         
         <!-- Notes -->
-        <div class="section">
+        <div class="section" style="display:none;">
           <h3>Notes</h3>
           <label>Notes/Services</label>
           <textarea class="input-field" id="notes" placeholder="Add notes or additional services..."></textarea>
@@ -344,7 +344,7 @@
       
       <!-- Laser/Misc Form -->
       <div id="laserForm" style="display:none;">
-        <div class="section">
+        <div class="section" style="display:none;">
           <h3>Laser/Misc Details</h3>
           <label>Laser/Misc Details</label>
           <textarea class="input-field" id="laserDetails" placeholder="Enter detailed description of the custom work..."></textarea>
@@ -386,14 +386,14 @@
       <h2 class="section-title" style="text-align:center;">Order Request</h2>
 
       <!-- Quote Items -->
-      <div class="section">
+      <div class="section" style="display:none;">
         <div id="quoteItemsContainer">
           <div class="empty-state" id="emptyState"><p>No items added yet</p><p class="sub">Use the calculator to add items</p></div>
         </div>
       </div>
 
       <!-- Quote Summary -->
-      <div class="section">
+      <div class="section" style="display:none;">
         <div class="summary-box">
           <h3 style="margin-bottom:12px;">Quote Summary</h3>
           <div class="summary-row">
@@ -420,7 +420,7 @@
       </div>
       
       <!-- Delivery & Turnaround -->
-      <div class="section">
+      <div class="section" style="display:none;">
         <label style="margin-bottom:8px; display:block;">Delivery & Turnaround</label>
         <div class="delivery-tabs">
           <button class="delivery-tab active" id="tabStandard" onclick="setDeliveryTab('standard')">⏱ Standard Turnaround</button>
@@ -441,14 +441,14 @@
       </div>
       
       <!-- Reference -->
-      <div class="section">
+      <div class="section" style="display:none;">
         <label>Reference (optional)</label>
         <input type="text" class="input-field" id="reference" placeholder="e.g., Hotel Lobby Signs, Project Phase 2">
         <p style="font-size:12px; color:#9ca3af; margin-top:4px;">Add a project name or identifier</p>
       </div>
       
       <!-- Additional Notes -->
-      <div class="section">
+      <div class="section" style="display:none;">
         <label>Additional Notes</label>
         <textarea class="input-field" id="additionalNotes" placeholder="Add any additional notes to the quote..." style="min-height:100px;"></textarea>
       </div>
@@ -699,7 +699,7 @@ function resetForm() {
   document.getElementById('reverseEtched').checked = false;
   document.getElementById('etchedPhoto').checked = false;
   document.querySelector('input[name="discountType"][value="percentage"]').checked = true;
-  document.getElementById('discountValue').value = '10';
+  document.getElementById('discountValue').value = '9.09';
   document.querySelector('input[name="miscType"][value="fixed"]').checked = true;
   document.getElementById('miscValue').value = '';
     document.getElementById('notes').value = '';
@@ -1103,7 +1103,7 @@ function generatePDF() {
 document.addEventListener('DOMContentLoaded', function() {
   // Set discount to percentage mode with value 10
   document.querySelector('input[name="discountType"][value="percentage"]').checked = true;
-  document.getElementById('discountValue').value = '10';
+  document.getElementById('discountValue').value = '9.09';
 });
 </script>
 </body>
