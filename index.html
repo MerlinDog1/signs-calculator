@@ -203,10 +203,10 @@
 <div class="container">
   
   
-  <div style="display:flex;justify-content:center;margin-bottom:20px;">
-    <div class="toggle-group" style="background:#7c3aed;padding:4px;border-radius:8px;">
-      <button class="toggle-btn active" id="calcToggle" onclick="showCalculator()" style="background:transparent;color:#fff;">Calculator</button>
-      <button class="toggle-btn" id="gridToggle" onclick="showGrid()" style="background:transparent;color:#ccc;">Grid View</button>
+  <div style="display:flex;justify-content:center;margin-bottom:24px;">
+    <div style="display:flex;background:#f3f4f6;border-radius:12px;padding:4px;gap:4px;">
+      <button id="calcToggle" onclick="showCalculator()" style="padding:12px 32px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;background:#7c3aed;color:#fff;transition:all 0.2s;">Calculator</button>
+      <button id="gridToggle" onclick="showGrid()" style="padding:12px 32px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;background:transparent;color:#6b7280;transition:all 0.2s;">Grid View</button>
     </div>
   </div>
 
@@ -1190,19 +1190,32 @@ function updateSpreadsheet() {
 function showCalculator() {
   document.getElementById("calculatorLayout").style.display = "grid";
   document.getElementById("spreadsheetView").style.display = "none";
-  document.getElementById("calcToggle").classList.add("active");
+  document.getElementById("calcToggle").style.background = "#7c3aed";
   document.getElementById("calcToggle").style.color = "#fff";
-  document.getElementById("gridToggle").classList.remove("active");
-  document.getElementById("gridToggle").style.color = "#ccc";
+  document.getElementById("gridToggle").style.background = "transparent";
+  document.getElementById("gridToggle").style.color = "#6b7280";
 }
 
 function showGrid() {
-  document.getElementById("calculatorLayout").style.display = "none";
-  document.getElementById("spreadsheetView").style.display = "block";
-  document.getElementById("calcToggle").classList.remove("active");
-  document.getElementById("calcToggle").style.color = "#ccc";
-  document.getElementById("gridToggle").classList.add("active");
+  const calcLayout = document.getElementById("calculatorLayout");
+  const gridView = document.getElementById("spreadsheetView");
+  
+  // Move grid view outside layout if needed, or just toggle visibility
+  calcLayout.style.display = "none";
+  gridView.style.display = "block";
+  gridView.style.width = "100%";
+  gridView.style.maxWidth = "800px";
+  gridView.style.margin = "0 auto";
+  
+  document.getElementById("calcToggle").style.background = "transparent";
+  document.getElementById("calcToggle").style.color = "#6b7280";
+  document.getElementById("gridToggle").style.background = "#7c3aed";
   document.getElementById("gridToggle").style.color = "#fff";
+  
+  // Trigger update if dimensions exist
+  if (document.getElementById("spreadsheetWidth").value || document.getElementById("spreadsheetHeight").value) {
+    updateSpreadsheet();
+  }
 }
 
 // INIT: Set discount to 10% by default
