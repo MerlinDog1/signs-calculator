@@ -1247,7 +1247,6 @@ function showGrid() {
   const calcLayout = document.getElementById("calculatorLayout");
   const gridView = document.getElementById("spreadsheetView");
   
-  // Move grid view outside layout if needed, or just toggle visibility
   calcLayout.style.display = "none";
   gridView.style.display = "block";
   gridView.style.width = "100%";
@@ -1259,10 +1258,8 @@ function showGrid() {
   document.getElementById("gridToggle").style.background = "#7c3aed";
   document.getElementById("gridToggle").style.color = "#fff";
   
-  // Trigger update if dimensions exist
-  if (document.getElementById("spreadsheetWidth").value || document.getElementById("spreadsheetHeight").value) {
-    updateSpreadsheet();
-  }
+  // Always render tables on first load
+  updateSpreadsheet();
 }
 
 // INIT: Set discount to 10% by default
