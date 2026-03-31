@@ -572,6 +572,7 @@ function setPrintType(type) {
   });
   document.getElementById('standardForm').style.display = type === 'Laser/Misc' ? 'none' : 'block';
   document.getElementById('laserForm').style.display = type === 'Laser/Misc' ? 'block' : 'none';
+  if (type !== 'Laser/Misc') recalc();
 }
 
 function onMaterialChange() {
